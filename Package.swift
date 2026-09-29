@@ -45,7 +45,10 @@ let package = Package(
             ],
             path: "MapboxNavigation",
             resources: [
-                .copy("Resources/Assets.xcassets")
+                // `.process`, not `.copy`: `NSDataAsset` and `UIImage(named:in:)` read only the COMPILED
+                // catalog (`Assets.car`), and `.copy` ships the raw `.xcassets` folder instead. With `.copy`,
+                // `RouteVoiceController.rerouteSoundPlayer` force-unwraps a nil asset at construction.
+                .process("Resources/Assets.xcassets")
             ]
         ),
         .target(
