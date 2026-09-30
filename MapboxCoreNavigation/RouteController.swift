@@ -826,6 +826,20 @@ extension RouteController: CLLocationManagerDelegate {
         self.updateDistanceToManeuver()
     }
 
+    /**
+     Moves the current leg to the step at `index`, and sets which of that step’s spoken instructions comes next.
+
+     The step’s intersection distances and the distance to its maneuver are refreshed at once. Of the step’s spoken instructions that are already due at that distance, the nearest one is spoken on the next location update when `announce` is `true`, and none is spoken when it is `false`. An index outside the current leg changes nothing.
+
+     Call it outside the route controller’s own location update, so the rest of that update never mixes the old and the new step.
+
+     - parameter index: The index of the step to move to, in the current leg.
+     - parameter announce: Whether the nearest spoken instruction already due is spoken.
+     */
+    public func advanceStepIndex(to index: Array<RouteStep>.Index, announce: Bool) {
+        self.advanceStepIndex(to: index)
+    }
+
     func updateIntersectionDistances() {
         if let coordinates = routeProgress.currentLegProgress.currentStep.coordinates, let intersections = routeProgress.currentLegProgress.currentStep.intersections {
             let polyline = Polyline(coordinates)

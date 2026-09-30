@@ -127,4 +127,11 @@ open class TunnelIntersectionManager: NSObject {
         
         routeController.rawLocation = location
     }
+
+    /**
+     Ends a running tunnel animation now, without waiting for qualified locations.
+
+     The animated location manager loses its delegate, stops and is dropped, so no animated location reaches the route controller after this call. A later `enableTunnelAnimation(routeController:routeProgress:)` can start a new animation. Does nothing when no animation runs.
+     */
+    @objc public func stopTunnelAnimation() {}
 }

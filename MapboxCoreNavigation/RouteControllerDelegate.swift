@@ -20,6 +20,18 @@ public protocol RouteControllerDelegate: AnyObject {
     optional func routeController(_ routeController: RouteController, shouldRerouteFrom location: CLLocation) -> Bool
     
     /**
+     Returns whether the user is on the route at the given location, in place of the route controller’s own test.
+
+     If implemented, the route controller runs neither its own on-route test nor its catch-up to a later step of the current leg, and calls `routeController(_:shouldRerouteFrom:)` only when this method returns `false`. It is not called once the user has arrived at the current leg’s waypoint, or while `routeController(_:shouldPreventReroutesWhenArrivingAt:)` returns `false`. If this method is not implemented, `RouteController.userIsOnRoute(_:)` decides, as before.
+
+     - parameter routeController: The route controller that is tracking the user.
+     - parameter location: The user’s current location.
+     - returns: True if the user is on the route; false to let the route controller ask whether to reroute.
+     */
+    @objc(routeController:isUserOnRouteAtLocation:)
+    optional func routeController(_ routeController: RouteController, isUserOnRouteAt location: CLLocation) -> Bool
+
+    /**
      Called immediately before the route controller calculates a new route.
      
      This method is called after `routeController(_:shouldRerouteFrom:)` is called, simultaneously with the `RouteControllerWillReroute` notification being posted, and before `routeController(_:didRerouteAlong:reason:)` is called.

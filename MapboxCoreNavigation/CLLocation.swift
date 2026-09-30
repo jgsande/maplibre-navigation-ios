@@ -3,7 +3,8 @@ import MapboxDirections
 import Turf
 
 extension CLLocation {
-    var isQualified: Bool {
+    /// Whether the location is accurate enough to navigate on: a horizontal accuracy from 0 to 100 meters.
+    public var isQualified: Bool {
         0 ... 100 ~= horizontalAccuracy
     }
     
