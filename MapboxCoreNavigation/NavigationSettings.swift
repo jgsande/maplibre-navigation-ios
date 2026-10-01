@@ -10,9 +10,9 @@ public extension Notification.Name {
 }
 
 /**
- `NavigationSettings` provides a wrapper for UserDefaults.
+ `NavigationSettings` holds the navigation settings for the life of the process.
  
- Properties are prefixed and before they are stored in UserDefaults.standard.
+ Nothing is persisted. Every property starts at its default value in each process.
  */
 @objc(MBNavigationSettings)
 public class NavigationSettings: NSObject {
@@ -63,8 +63,6 @@ public class NavigationSettings: NSObject {
         super.init()
         for property in self.properties {
             guard let key = property.label else { continue }
-            let val = UserDefaults.standard.object(forKey: key.prefixed) ?? value(forKey: key)
-            setValue(val, forKey: key)
             addObserver(self, forKeyPath: key, options: .new, context: nil)
         }
     }
@@ -85,7 +83,6 @@ public class NavigationSettings: NSObject {
             if key == keyPath {
                 guard let val = change?[.newKey] else { continue }
                 
-                UserDefaults.standard.set(val, forKey: key.prefixed)
                 NotificationCenter.default.post(name: .navigationSettingsDidChange, object: nil, userInfo: [key: val])
                 
                 found = true
@@ -96,11 +93,5 @@ public class NavigationSettings: NSObject {
         if !found {
             super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
         }
-    }
-}
-
-private extension String {
-    var prefixed: String {
-        "MB" + self
     }
 }
