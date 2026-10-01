@@ -120,6 +120,8 @@ open class TunnelIntersectionManager: NSObject {
         
         self.isAnimationEnabled = false
         
+        // A tick already due still runs after the stop. Without a delegate it reaches no route controller.
+        self.animatedLocationManager?.delegate = nil
         self.animatedLocationManager?.stopUpdatingLocation()
         self.animatedLocationManager?.stopUpdatingHeading()
         self.animatedLocationManager = nil
@@ -133,5 +135,15 @@ open class TunnelIntersectionManager: NSObject {
 
      The animated location manager loses its delegate, stops and is dropped, so no animated location reaches the route controller after this call. A later `enableTunnelAnimation(routeController:routeProgress:)` can start a new animation. Does nothing when no animation runs.
      */
-    @objc public func stopTunnelAnimation() {}
+    @objc public func stopTunnelAnimation() {
+        guard self.isAnimationEnabled else { return }
+
+        self.isAnimationEnabled = false
+
+        self.animatedLocationManager?.delegate = nil
+        self.animatedLocationManager?.stopUpdatingLocation()
+        self.animatedLocationManager?.stopUpdatingHeading()
+        self.animatedLocationManager = nil
+        self.tunnelExitLocations.removeAll()
+    }
 }

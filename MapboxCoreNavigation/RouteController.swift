@@ -400,7 +400,7 @@ extension RouteController: CLLocationManagerDelegate {
         self.updateRouteLegProgress(for: location)
         self.updateVisualInstructionProgress()
 
-        guard self.userIsOnRoute(location) || !(self.delegate?.routeController?(self, shouldRerouteFrom: location) ?? true) else {
+        guard self.isOnRoute(location) || !(self.delegate?.routeController?(self, shouldRerouteFrom: location) ?? true) else {
             self.rerouteForDiversion(from: location, along: self.routeProgress)
             return
         }
@@ -503,6 +503,25 @@ extension RouteController: CLLocationManagerDelegate {
         return false
     }
     
+    /**
+     The on-route decision for one location update.
+
+     A delegate that implements `routeController(_:isUserOnRouteAt:)` decides, after the arrival guard of `userIsOnRoute(_:)`. Any other delegate leaves the decision to `userIsOnRoute(_:)`, as before.
+     */
+    func isOnRoute(_ location: CLLocation) -> Bool {
+        let hook = #selector(RouteControllerDelegate.routeController(_:isUserOnRouteAt:))
+        guard let delegate = self.delegate, (delegate as? NSObjectProtocol)?.responds(to: hook) == true else {
+            return self.userIsOnRoute(location)
+        }
+        // If the user has arrived, do not continue monitor reroutes, step progress, etc
+        guard !self.routeProgress.currentLegProgress.userHasArrivedAtWaypoint,
+              delegate.routeController?(self, shouldPreventReroutesWhenArrivingAt: self.routeProgress.currentLeg.destination) ?? true
+        else {
+            return true
+        }
+        return delegate.routeController?(self, isUserOnRouteAt: location) ?? self.userIsOnRoute(location)
+    }
+
     func checkForNewRoute(from location: CLLocation) {
         guard !self.isFindingFasterRoute else {
             return
@@ -837,7 +856,16 @@ extension RouteController: CLLocationManagerDelegate {
      - parameter announce: Whether the nearest spoken instruction already due is spoken.
      */
     public func advanceStepIndex(to index: Array<RouteStep>.Index, announce: Bool) {
+        guard index >= 0, index < self.routeProgress.currentLeg.steps.count else { return }
         self.advanceStepIndex(to: index)
+        let stepProgress = self.routeProgress.currentLegProgress.currentStepProgress
+        guard let distance = self.userSnapToStepDistanceFromManeuver,
+              let instructions = stepProgress.step.instructionsSpokenAlongStep
+        else { return }
+        // `updateSpokenInstructionProgress()` speaks the first remaining instruction that is due. Skip every
+        // due instruction but the nearest one, or all of them.
+        let due = instructions.filter { distance <= $0.distanceAlongStep }.count
+        stepProgress.spokenInstructionIndex = announce ? max(due - 1, 0) : due
     }
 
     func updateIntersectionDistances() {
